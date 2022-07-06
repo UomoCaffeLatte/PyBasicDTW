@@ -62,15 +62,37 @@ class Core_UnitTest(unittest.TestCase):
     #     pass
     
     # # COST MATRIX
+    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])
+    def test_costMatrix_xy_fail(self, mockLexiMinIndex):
+        # Arrange
+        x = np.array([[1,2,3],[1,2,3]])
+        y = np.array([[1,2],[1,2],[1,2,]])
+        # Act # Assert
+        with self.assertRaises(ValueError):
+            self.core.CostMatrix(x = x, y = y)
+        mockLexiMinIndex.assert_not_called()
 
-    # def test_costMatrix_defaultDimWeights(self):
-    #     pass
+    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[0])
+    def test_costMatrix_defaultDimWeights(self, mockLexiMinIndex):
+         # Arrange
+        x = np.array([[1,2,3],[1,2,3]])
+        y = np.array([[1,2,3],[1,2,3],[1,2,3]])
+        # Act
+        self.core.CostMatrix(x,y)
+        # Assert
+        self.assertTrue(np.array_equal(np.array([1,1,1]), self.core.dimWeights))
+        mockLexiMinIndex.assert_called()
 
-    # def test_costMatrix_customDimWeights(self):
-    #     pass
-
-    # def test_costMatrix_customDimWeights_fail(self):
-    #     pass
+    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])
+    def test_costMatrix_customDimWeights_fail(self, mockLexiMinIndex):
+        # Arrange
+        x = np.array([[1,2,3],[1,2,3]])
+        y = np.array([[1,2,3],[1,2,3],[1,2,3]])
+        dimWeights = np.array([1,1,1,1])
+        # Act # Assert
+        with self.assertRaises(ValueError):
+            self.core.CostMatrix(x,y, dimWeights)
+        mockLexiMinIndex.assert_not_called()
 
     ## for all local and accumulated cost matrix tests ensure to test both sdtw and dtw version
     def test_costMatrix_1dDiffLength(self):
