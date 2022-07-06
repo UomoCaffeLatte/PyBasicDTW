@@ -45,21 +45,43 @@ class Core_UnitTest(unittest.TestCase):
 
     # INIT
 
-    # def test_init_defaultStepWeights(self):
-    #     pass
+    def test_init_defaultStepWeights(self):
+        # Arrange
+        x, y, _, _ = self.OneDSequences()
+        # Act
+        _, _ = self.core.CostMatrix(x,y)
+        # Assert
+        self.assertTrue(np.array_equal(np.array([1]), self.core.dimWeights))
 
-    # def test_init_customStepWeights(self):
-    #     pass
+    def test_init_customStepWeights(self):
+        # Arrange
+        x,y, _, _ = self.TwoDSequences()
+        # Act
+        _, _ = self.core.CostMatrix(x,y, dimensionWeights=np.array([1,1]))
+        # Assert
+        self.assertTrue(np.array_equal(np.array([1,1]), self.core.dimWeights))
 
-    # def test_init_customStepWeights_fail(self):
-    #     pass
-
-    # def test_init_distanceMetric(self):
-    #     pass
+    def test_init_customStepWeights_fail(self):
+        # Arrange
+        x,y, _, _ = self.TwoDSequences()
+        # Act and Assert
+        with self.assertRaises(ValueError):
+            _, _ = self.core.CostMatrix(x,y,np.array([1,1,1]))
     
-    # def test_init_stepPattern(self):
-    #     pass
+    def test_init_distanceMetric(self):
+        # Arrange # Act
+        core1 = Core(DistanceMetric.EUCLIDEAN)
+        core2 = Core(DistanceMetric.ABSOLUTE)
+        # Assert
+        self.assertEqual(core1.distanceMetrics[DistanceMetric.EUCLIDEAN.name],core1.metric)
+        self.assertEqual(core2.distanceMetrics[DistanceMetric.ABSOLUTE.name],core2.metric)
     
+    def test_init_stepPattern(self):
+        # Arrange # Act
+        core = Core(stepPattern=StepPattern.CLASSIC)
+        # Assert
+        self.assertTrue(np.array_equal(StepPattern.CLASSIC.value, core.stepPattern))
+
     # # COST MATRIX
     @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])
     def test_costMatrix_xy_fail(self, mockLexiMinIndex):
@@ -197,7 +219,75 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(totalCost1, 20)
         self.assertTrue(np.array_equal(np.array([(2,1),(1,0),(0,0)]), path2))
         self.assertTrue(totalCost2, 20)
-    # LEXIARGMIN
 
+    def test_optimalWarpingPath_1DReverseSdtwEndIndex(self):
+        # Arrange
+        _,_, LCost, ACost = self.OneDSequences(sdtw=True, reverse=True)
+        # Act
+        self.core.sdtw = True
+        path1, totalCost1 = self.core.WarpingPath(ACost, LCost.transpose(), endIndex=(4,1))
+        path2, totalCost2 = self.core.WarpingPath(ACost, LCost.transpose(), endIndex=(4,0))
+        self.core.sdtw = False
+        # Assert
+        self.assertTrue(np.array_equal(np.array([(4,1),(3,1),(2,1),(1,1),(0,1)]), path1))
+        self.assertTrue(totalCost1, 45)
+        self.assertTrue(np.array_equal(np.array([(4,0),(3,0),(2,0),(1,0),(0,0)]), path2))
+        self.assertTrue(totalCost2, 60)
+
+    def test_optimaWarpingPath_2DdtwEndIndex(self):
+        # Arrange
+        _,_, LCost, ACost = self.TwoDSequences()
+        # Act
+        path, totalCost = self.core.WarpingPath(ACost, LCost)
+        # Assert
+        self.assertTrue(np.array_equal(path, np.array([(2,4), (2,3), (2,2), (1, 1), (0, 0)])))
+        self.assertTrue(totalCost, 80)
+
+    def test_optimalWarpingPath_2DsdtwEndIndex(self):
+        # Arrange
+        _,_, LCost, ACost = self.TwoDSequences(sdtw=True)
+        # Act
+        self.core.sdtw = True
+        path1, totalCost1 = self.core.WarpingPath(ACost, LCost, endIndex=(2,2))
+        path2, totalCost2 = self.core.WarpingPath(ACost, LCost, endIndex=(2,1))
+        self.core.sdtw = False
+        # Assert
+        self.assertTrue(np.array_equal(np.array([(2,2),(1,1),(0,0)]), path1))
+        self.assertTrue(totalCost1, 40)
+        self.assertTrue(np.array_equal(np.array([(2,1),(1,0),(0,0)]), path2))
+        self.assertTrue(totalCost2, 40)
+
+    # LEXIARGMIN
+    def test_LexiArgMin_Equal(self):
+        # arrange
+        items = np.array([100,100,100])
+        # act
+        minIndex = self.core.LexiMin(items)
+        # assaert
+        self.assertEqual(minIndex, 0)
+
+    def test_LexiArgMin_NonEqual(self):
+        # arrange
+        items = np.array([50,20,150])
+        # act
+        minIndex = self.core.LexiMin(items)
+        # assaert
+        self.assertEqual(minIndex, 1)
+
+    def test_LexiArgMin_EqualInverted(self):
+        # arrange
+        items = np.array([100,100,100])
+        # act
+        minIndex = self.core.LexiMin(items, invert=True)
+        # assaert
+        self.assertEqual(minIndex, 2)
+
+    def test_LexiArgMin_NonEqualInverted(self):
+        # arrange
+        items = np.array([50,20,150])
+        # act
+        minIndex = self.core.LexiMin(items, invert=True)
+        # assaert
+        self.assertEqual(minIndex, 1)
     if __name__ == "__main__":
         unittest.main(verbosity=2)
