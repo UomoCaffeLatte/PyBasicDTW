@@ -2,6 +2,7 @@ from typing import Tuple
 import numpy as np
 from types import LambdaType
 from enum import Enum
+import warnings
 
 class DistanceMetric(Enum):
     EUCLIDEAN = 1
@@ -20,6 +21,7 @@ class Core:
         self.dimWeights = None
         self.localCost = None
         self.accumulatedCost = None
+        self.sdtw:bool = False
         # type Check DistanceMetric & StepPattern
         if not isinstance(distanceMetric, DistanceMetric): raise TypeError("Distance metric must be of DistanceMetric type.")
         if not isinstance(stepPattern, StepPattern): raise TypeError("Step pattern must be of StepPattern type.")
@@ -35,6 +37,7 @@ class Core:
             self.stepWeights = stepWeights
 
     def CostMatrix(self, x:np.ndarray, y:np.ndarray, dimensionWeights:np.ndarray=np.array([]), sdtw:bool=False) -> Tuple:
+        self.sdtw = sdtw
         # NOTE: x and y arrays must be given in the list format where each item corresponds to the values at some time t.
         # NOTE: x is the sequence to find within y for sdtw
         ## VALIDATION ##
@@ -85,14 +88,49 @@ class Core:
                 stepChoices = (r,c) - self.stepPattern
                 mask[stepChoices[:,0],stepChoices[:,1]] = True
                 # obtain lexi arg min value from mask
-                self.accumulatedCost[r,c] = self.accumulatedCost[mask][self.LexiMin(self.accumulatedCost[mask])] + self.localCost[r-realZeroIndex[0],c-realZeroIndex[1]]
+                minCostIndex = self.LexiMin(self.accumulatedCost[mask])
+                self.accumulatedCost[r,c] = (self.accumulatedCost[mask][minCostIndex]*self.stepWeights[minCostIndex]) + self.localCost[r-realZeroIndex[0],c-realZeroIndex[1]]
         # 3. Remove padding for final complete accumulated cost matrix
         self.accumulatedCost = self.accumulatedCost[realZeroIndex[0]:, realZeroIndex[1]:]
         return self.localCost, self.accumulatedCost
 
         ## /COSTCALC ##
-    def WarpingPath(self) -> Tuple:
-        pass
+    def WarpingPath(self, aCost:np.ndarray, lCost:np.ndarray, endIndex:Tuple=None) -> Tuple:
+        # check if given endpoint can be used or not.
+        forceStartPoint = True
+        if not self.sdtw and endIndex != None: 
+            warnings.warn("Warning: endIndex ignored in finding optimal warping path as sdtw cost not calculated.")
+            endIndex = None
+        if self.sdtw and endIndex != None: forceStartPoint = False
+        # calculate end point if non given
+        if endIndex == None: 
+            endIndex = (aCost.shape[0]-1, lCost.shape[1]-1)
+        # start finding path
+        path = [endIndex]
+        startReached = False
+        while not startReached:
+            # Calculate all potential step choices using mask
+            # create mask from step choices
+            mask = np.zeros(aCost.shape, bool)
+            stepChoices = path[-1] - self.stepPattern
+            mask[stepChoices[:,0],stepChoices[:,1]] = True
+            # Find lowest costing step and # ignore negative stepChoices by setting aCost to INF
+            stepCosts = aCost[mask]
+            # find index of elements with negative index and set cost to inf
+            negativeIndices = np.argwhere(stepChoices<0)
+            for nIndx in negativeIndices: stepCosts[nIndx[0]] = np.inf
+            optimalStep = stepChoices[self.LexiMin(stepCosts)]
+            path.append(optimalStep)
+            # Check if start point reached
+            if forceStartPoint and (path[-1] == (0,0)).all(): startReached = True
+            if not forceStartPoint and path[-1][0] == 0: startReached = True
+        # Calcualte total dtw cost
+        path = np.array(path)
+        mask = np.zeros(lCost.shape, bool)
+        mask[path[:,0],path[:,1]] = True
+        totalCost = np.sum(lCost[mask])
+        return path, totalCost
+        
 
     def LexiMin(self, list:np.ndarray, invert:bool=False) -> int:
         """ Get the lexiographical minimum in a 1D array.

@@ -25,7 +25,6 @@ class Core_UnitTest(unittest.TestCase):
         if sdtw: ACost = np.array([[0,2,4],[2,0,2],[6,2,0]], dtype="float")
         return x,y, LCost, ACost
 
-
     def OneDSequences(self, sdtw=False, reverse=False):
         x = np.array([[1],[2],[3]], dtype="float")
         y = np.array([[5],[5],[5],[5],[5]], dtype="float")
@@ -176,7 +175,28 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(np.array_equal(ASCostTruth, ASCost))
     
     # OPTIMAL WARPING PATH
+    def test_optimalWarpingPath_1DdtwEndIndex(self):
+        # Arrange
+        _,_, LCost, ACost = self.OneDSequences()
+        # Act
+        path, totalCost = self.core.WarpingPath(ACost, LCost)
+        # Assert
+        self.assertTrue(np.array_equal(path, np.array([(2,4), (2,3), (2,2), (1, 1), (0, 0)])))
+        self.assertTrue(totalCost, 40)
 
+    def test_optimalWarpingPath_1DsdtwEndIndex(self):
+        # Arrange
+        _,_, LCost, ACost = self.OneDSequences(sdtw=True)
+        # Act
+        self.core.sdtw = True
+        path1, totalCost1 = self.core.WarpingPath(ACost, LCost, endIndex=(2,2))
+        path2, totalCost2 = self.core.WarpingPath(ACost, LCost, endIndex=(2,1))
+        self.core.sdtw = False
+        # Assert
+        self.assertTrue(np.array_equal(np.array([(2,2),(1,1),(0,0)]), path1))
+        self.assertTrue(totalCost1, 20)
+        self.assertTrue(np.array_equal(np.array([(2,1),(1,0),(0,0)]), path2))
+        self.assertTrue(totalCost2, 20)
     # LEXIARGMIN
 
     if __name__ == "__main__":
