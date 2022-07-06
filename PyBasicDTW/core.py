@@ -60,6 +60,8 @@ class Core:
         self.localCost = self.metric(x,y) * self.dimWeights
         # 3. Sum each index using numpy broadcasting, each row corresponds to one x value along all y values 
         self.localCost = np.sum(self.localCost, axis=2)
+        # tranpose matrix to negative effects of broadcasting when x is larger than y
+        if x.shape[0] > y.shape[0]: self.localCost = np.transpose(self.localCost)
         # The accumulated cost matrix is more complicated to calculate.
         # 1. Create an empty extended accumulated cost matrix dependent on the StepPattern
         ## 1a. Find the maximum step in x and y direction
