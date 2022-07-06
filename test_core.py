@@ -44,7 +44,6 @@ class Core_UnitTest(unittest.TestCase):
         return x,y, LCost, ACost
 
     # INIT
-
     def test_init_defaultStepWeights(self):
         # Arrange
         x, y, _, _ = self.OneDSequences()
@@ -204,7 +203,7 @@ class Core_UnitTest(unittest.TestCase):
         path, totalCost = self.core.WarpingPath(ACost, LCost)
         # Assert
         self.assertTrue(np.array_equal(path, np.array([(2,4), (2,3), (2,2), (1, 1), (0, 0)])))
-        self.assertTrue(totalCost, 40)
+        self.assertEqual(totalCost, 13)
 
     def test_optimalWarpingPath_1DsdtwEndIndex(self):
         # Arrange
@@ -216,9 +215,9 @@ class Core_UnitTest(unittest.TestCase):
         self.core.sdtw = False
         # Assert
         self.assertTrue(np.array_equal(np.array([(2,2),(1,1),(0,0)]), path1))
-        self.assertTrue(totalCost1, 20)
+        self.assertEqual(totalCost1, 9)
         self.assertTrue(np.array_equal(np.array([(2,1),(1,0),(0,0)]), path2))
-        self.assertTrue(totalCost2, 20)
+        self.assertEqual(totalCost2, 9)
 
     def test_optimalWarpingPath_1DReverseSdtwEndIndex(self):
         # Arrange
@@ -230,9 +229,9 @@ class Core_UnitTest(unittest.TestCase):
         self.core.sdtw = False
         # Assert
         self.assertTrue(np.array_equal(np.array([(4,1),(3,1),(2,1),(1,1),(0,1)]), path1))
-        self.assertTrue(totalCost1, 45)
+        self.assertEqual(totalCost1, 15)
         self.assertTrue(np.array_equal(np.array([(4,0),(3,0),(2,0),(1,0),(0,0)]), path2))
-        self.assertTrue(totalCost2, 60)
+        self.assertEqual(totalCost2, 20)
 
     def test_optimaWarpingPath_2DdtwEndIndex(self):
         # Arrange
@@ -241,7 +240,7 @@ class Core_UnitTest(unittest.TestCase):
         path, totalCost = self.core.WarpingPath(ACost, LCost)
         # Assert
         self.assertTrue(np.array_equal(path, np.array([(2,4), (2,3), (2,2), (1, 1), (0, 0)])))
-        self.assertTrue(totalCost, 80)
+        self.assertEqual(totalCost, 26)
 
     def test_optimalWarpingPath_2DsdtwEndIndex(self):
         # Arrange
@@ -253,9 +252,9 @@ class Core_UnitTest(unittest.TestCase):
         self.core.sdtw = False
         # Assert
         self.assertTrue(np.array_equal(np.array([(2,2),(1,1),(0,0)]), path1))
-        self.assertTrue(totalCost1, 40)
+        self.assertEqual(totalCost1, 18)
         self.assertTrue(np.array_equal(np.array([(2,1),(1,0),(0,0)]), path2))
-        self.assertTrue(totalCost2, 40)
+        self.assertEqual(totalCost2, 18)
 
     # LEXIARGMIN
     def test_LexiArgMin_Equal(self):
