@@ -9,6 +9,23 @@ class Core_UnitTest(unittest.TestCase):
     def setUp(self) -> None:
         self.core = Core(DistanceMetric.ABSOLUTE, StepPattern.CLASSIC)
 
+    def OneDSequenceSameLength(self, sdtw=False):
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3]], dtype="float")
+        LCost = np.array([[0,1,2],[1,0,1],[2,1,0]], dtype="float")
+        ACost = np.array([[0,1,3],[1,0,1],[3,1,0]], dtype="float")
+        if sdtw: ACost = np.array([[0,1,2],[1,0,1],[3,1,0]], dtype="float")
+        return x,y, LCost, ACost
+
+    def TwoDSequenceSameLength(self, sdtw=False):
+        x = np.array([[1,1],[2,2],[3,3]], dtype="float")
+        y = np.array([[1,1],[2,2],[3,3]], dtype="float")
+        LCost = np.array([[0,2,4],[2,0,2],[4,2,0]], dtype="float")
+        ACost = np.array([[0,2,6],[2,0,2],[6,2,0]], dtype="float")
+        if sdtw: ACost = np.array([[0,2,4],[2,0,2],[6,2,0]], dtype="float")
+        return x,y, LCost, ACost
+
+
     def OneDSequences(self, sdtw=False, reverse=False):
         x = np.array([[1],[2],[3]], dtype="float")
         y = np.array([[5],[5],[5],[5],[5]], dtype="float")
@@ -69,7 +86,6 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(np.array_equal(LSCostTruth, LSCost))
         self.assertTrue(np.array_equal(ASCostTruth, ASCost))
 
-
     def test_costMatrix_2dDiffLength(self):
         # arrange
         x1, y1, LCostTruth, ACostTruth = self.TwoDSequences()
@@ -83,7 +99,6 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(np.array_equal(LSCostTruth, LSCost))
         self.assertTrue(np.array_equal(ASCostTruth, ASCost))
 
-    
     def test_costMatrix_1dReverseLength(self):
         # arrange
         x1, y1, LCostTruth, ACostTruth = self.OneDSequences()
@@ -112,13 +127,32 @@ class Core_UnitTest(unittest.TestCase):
         # ASCost wont be symmetric
         self.assertTrue(np.array_equal(ASCostTruth, ASCost))
 
+    def test_costMatrix_1dSameLength(self):
+        # arrange
+        x1, y1, LCostTruth, ACostTruth = self.OneDSequenceSameLength()
+        x2, y2, LSCostTruth, ASCostTruth = self.OneDSequenceSameLength(sdtw=True)
+        # Act
+        LCost, ACost = self.core.CostMatrix(y1,x1)
+        LSCost, ASCost = self.core.CostMatrix(y2,x2, sdtw=True) 
+        # Assert
+        self.assertTrue(np.array_equal(LCostTruth, LCost))
+        self.assertTrue(np.array_equal(ACostTruth, ACost))
+        self.assertTrue(np.array_equal(LSCostTruth, LSCost))
+        self.assertTrue(np.array_equal(ASCostTruth, ASCost))
 
-    # def test_costMatrix_1dSameLength(self):
-    #     pass
-
-    # def test_costMatrix_2dSameLength(self):
-    #     pass
-
+    def test_costMatrix_2dSameLength(self):
+        # arrange
+        x1, y1, LCostTruth, ACostTruth = self.TwoDSequenceSameLength()
+        x2, y2, LSCostTruth, ASCostTruth = self.TwoDSequenceSameLength(sdtw=True)
+        # Act
+        LCost, ACost = self.core.CostMatrix(y1,x1)
+        LSCost, ASCost = self.core.CostMatrix(y2,x2, sdtw=True) 
+        # Assert
+        self.assertTrue(np.array_equal(LCostTruth, LCost))
+        self.assertTrue(np.array_equal(ACostTruth, ACost))
+        self.assertTrue(np.array_equal(LSCostTruth, LSCost))
+        self.assertTrue(np.array_equal(ASCostTruth, ASCost))
+    
     # OPTIMAL WARPING PATH
 
     # LEXIARGMIN

@@ -56,6 +56,7 @@ class Core:
         # 1. If x and y are not equal shapes, increase dimension of smaller array so that numpy can broadcast.
         if x.shape[0] > y.shape[0]: y = y[:,np.newaxis]
         if y.shape[0] > x.shape[0]: x = x[:,np.newaxis]
+        if x.shape[0] == y.shape[0]: x = x[:,np.newaxis] # to ensure proper broadcasting
         # 2. calculate distance metric using numpy broadcasting
         self.localCost = self.metric(x,y) * self.dimWeights
         # 3. Sum each index using numpy broadcasting, each row corresponds to one x value along all y values 
