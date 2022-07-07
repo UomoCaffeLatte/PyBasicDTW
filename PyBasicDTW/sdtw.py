@@ -1,16 +1,18 @@
+from enum import Enum
 import numpy as np
 from PyBasicDTW.core import Core, DistanceMetric, StepPattern
-from typing import Tuple
+from typing import Tuple, Type
 import warnings
+import inspect
 
 class NeighbourExclusion:
-    @staticmethod
-    def Match(targetIndex:int, searchArray:np.ndarray, matchTimeLength:int) -> None:
+    @classmethod
+    def Match(cls,targetIndex:int, searchArray:np.ndarray, matchTimeLength:int) -> None:
         # Exclude points within the current matched period. As numpy arrays pass by reference, the resulting list does not need to be passed back.
         searchArray[targetIndex-matchTimeLength:targetIndex+1] = np.inf
 
-    @staticmethod
-    def Distance(targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
+    @classmethod
+    def Distance(cls,targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
         # Exclude points within set distance from center. As numpy arrays pass by reference, the resulting list does not need to be passed back.
         # ensure searchArray is a float
         if not searchArray.dtype == np.float64: raise TypeError("SearchArray must of be of a float64 numpy array type.")
@@ -26,8 +28,8 @@ class NeighbourExclusion:
         # 2. set masked items to np.inf
         searchArray[mask] = np.inf
 
-    @staticmethod
-    def LocalMaximum(targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
+    @classmethod
+    def LocalMaximum(cls,targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
         # Exclude points within the local maximuim on either side of the center point. As numpy arrays pass by reference, the resulting list does not need to be passed back.
         # ensure searchArray is a float
         if not searchArray.dtype == np.float64: raise TypeError("SearchArray must of be of a float64 numpy array type.")
@@ -84,9 +86,10 @@ class SDTW(Core):
     def GetEndCost(self, path:np.ndarray) -> float:
         return self.__originalACost[path[0]]
 
-    def FindMatch(self, neighbourExclusion:NeighbourExclusion=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, **kwargs) -> Tuple:
+    def FindMatch(self, neighbourExclusion:Type[NeighbourExclusion]=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, **kwargs) -> Tuple:
         # Validate neighbourExclusion optional args are valid
-        if not isinstance(neighbourExclusion, NeighbourExclusion): raise TypeError("NeighbourExclusion must be of NeighbourExclusion type.")
+        if not callable(neighbourExclusion): raise TypeError("NeighbourExclusion must be of NeighbourExclusion type.")
+        if not hasattr(NeighbourExclusion, neighbourExclusion.__name__): raise ValueError("NeighbourExclusion must be a method from the NeighbourExclusion class.")
         if neighbourExclusion == NeighbourExclusion.Distance: 
             if kwargs.get("distance","NONE") == "NONE": raise ValueError("For NeighbourhoodExclusion.Distance please provide a distance using the keyword arg 'distance'.")
         # Check if any more matches can be found
