@@ -3,9 +3,9 @@ from PyBasicDTW.core import Core, DistanceMetric, StepPattern
 
 class NeighbourExclusion:
     @staticmethod
-    def Match(targetIndex:int, searchArray:np.ndarray, matchLength:int) -> None:
+    def Match(targetIndex:int, searchArray:np.ndarray, matchTimeLength:int) -> None:
         # Exclude points within the current matched period. As numpy arrays pass by reference, the resulting list does not need to be passed back.
-        pass
+        searchArray[targetIndex-matchTimeLength:targetIndex+1] = np.inf
 
     @staticmethod
     def Distance(targetIndex:int, searchArray:np.ndarray, distance:int) -> None:

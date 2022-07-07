@@ -78,3 +78,14 @@ class NeighbourExclusion_unitTests(unittest.TestCase):
         # Act and Assert
         with self.assertRaises(TypeError):
             NeighbourExclusion.LocalMaximum(targetIndex=5, searchArray=endPoints)
+
+    def test_MatchExclusion_Random(self):
+        # Arrange
+        endPoints = np.random.default_rng().uniform(0,1000,50)
+        matchTimeLength = np.random.randint(0,9)
+        targetIndex = np.random.randint(10,50) 
+        # Act
+        NeighbourExclusion.Match(targetIndex=targetIndex, searchArray=endPoints, matchTimeLength=matchTimeLength)
+        # Assert
+        self.assertTrue(np.all(endPoints[targetIndex-matchTimeLength:targetIndex+1] == np.inf))
+        self.assertTrue(endPoints[endPoints == np.inf].shape[0] == matchTimeLength+1)
