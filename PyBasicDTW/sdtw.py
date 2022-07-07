@@ -1,5 +1,7 @@
 import numpy as np
 from PyBasicDTW.core import Core, DistanceMetric, StepPattern
+from typing import Tuple
+import warnings
 
 class NeighbourExclusion:
     @staticmethod
@@ -8,15 +10,16 @@ class NeighbourExclusion:
         searchArray[targetIndex-matchTimeLength:targetIndex+1] = np.inf
 
     @staticmethod
-    def Distance(targetIndex:int, searchArray:np.ndarray, distance:int) -> None:
+    def Distance(targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
         # Exclude points within set distance from center. As numpy arrays pass by reference, the resulting list does not need to be passed back.
         # ensure searchArray is a float
         if not searchArray.dtype == np.float64: raise TypeError("SearchArray must of be of a float64 numpy array type.")
+        if kwargs.get("distance","None") == "None": raise ValueError("Distance argument missing.")
         # 1. create a mask
         mask = np.zeros(searchArray.shape, bool)
-        leftMostIdx = targetIndex - distance
+        leftMostIdx = targetIndex - kwargs.get("distance")
         if leftMostIdx < 0: leftMostIdx = 0
-        rightMostIdx = targetIndex + distance + 1
+        rightMostIdx = targetIndex + kwargs.get("distance") + 1
         # rightMostIdx always is 1+ count for slicing, as the end index is not included.
         if rightMostIdx > searchArray.shape[0]: rightMostIdx = searchArray.shape[0]
         mask[leftMostIdx:rightMostIdx] = True
@@ -24,7 +27,7 @@ class NeighbourExclusion:
         searchArray[mask] = np.inf
 
     @staticmethod
-    def LocalMaximum(targetIndex:int, searchArray:np.ndarray) -> None:
+    def LocalMaximum(targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
         # Exclude points within the local maximuim on either side of the center point. As numpy arrays pass by reference, the resulting list does not need to be passed back.
         # ensure searchArray is a float
         if not searchArray.dtype == np.float64: raise TypeError("SearchArray must of be of a float64 numpy array type.")
@@ -59,6 +62,8 @@ class SDTW(Core):
         super().__init__(distanceMetric=distanceMetric, stepPattern=stepPattern, stepWeights=stepWeights)
         # compute match
         self.__lCost, self.__aCost = self.CostMatrix(x, y, dimensionWeights)
+        # Copy of original accumulated cost as it will be altered during matching.
+        self.__originalACost = np.copy(self.__aCost)
         # collate all possible end points
         self.__endPoints = np.copy(self.__aCost[-1,:])
         # variable to store ordered matches with each match a tuple in the format (path, totalCost)
@@ -66,8 +71,35 @@ class SDTW(Core):
 
     @property
     def AccumulatedCostMatrix(self):
-        return self.__aCost
+        return self.__originalACost
 
     @property
     def LocalCostMatrix(self):
         return self.__lCost
+
+    @property
+    def Matches(self):
+        return self.__matches
+
+    def GetEndCost(self, path:np.ndarray) -> float:
+        return self.__originalACost[path[0]]
+
+    def FindMatch(self, neighbourExclusion:NeighbourExclusion=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, **kwargs) -> Tuple:
+        # Validate neighbourExclusion optional args are valid
+        if not isinstance(neighbourExclusion, NeighbourExclusion): raise TypeError("NeighbourExclusion must be of NeighbourExclusion type.")
+        if neighbourExclusion == NeighbourExclusion.Distance: 
+            if kwargs.get("distance","NONE") == "NONE": raise ValueError("For NeighbourhoodExclusion.Distance please provide a distance using the keyword arg 'distance'.")
+        # Check if any more matches can be found
+        if np.all(self.__endPoints == np.inf):
+            warnings.warn("No more matches can be found.")
+            return None, None
+        # Find optimum end point, check if right or leftmost match to be chosen in non-unique scenario.
+        optimumEndPointIdx = self.LexiMin(self.__endPoints, invert=invertEndPointSelection)
+        # Find warping path
+        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, optimumEndPointIdx)
+        # Perform neighbourhood exclusion
+        neighbourExclusion(optimumEndPointIdx, self.__endPoints, **kwargs)
+        # add match overlap feature onto accumulated cost matrix
+        if not overlapMatches: NeighbourExclusion.Match(optimumEndPointIdx, self.__endPoints, (path[0][1] - path[-1][1]))
+        self.__matches.append([path, totalCost])
+        return path, totalCost
