@@ -167,9 +167,6 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), path))
         self.assertEqual(totalCost, 18)
 
-    def test_property_matches(self):
-        pass
-
     @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
     @mock.patch("PyBasicDTW.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
     @mock.patch("PyBasicDTW.sdtw.NeighbourExclusion.Match", return_value=[None])
