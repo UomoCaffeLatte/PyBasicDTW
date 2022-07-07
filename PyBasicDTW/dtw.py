@@ -1,9 +1,4 @@
-from typing import Tuple
 import numpy as np
-from types import LambdaType
-from enum import Enum
-import warnings
-
 from PyBasicDTW.core import Core, DistanceMetric, StepPattern
 
 class DTW(Core):
