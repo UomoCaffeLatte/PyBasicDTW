@@ -63,7 +63,7 @@ class SDTW(Core):
         # Initalise CORE
         super().__init__(distanceMetric=distanceMetric, stepPattern=stepPattern, stepWeights=stepWeights)
         # compute match
-        self.__lCost, self.__aCost = self.CostMatrix(x, y, dimensionWeights)
+        self.__lCost, self.__aCost = self.CostMatrix(x, y, dimensionWeights, sdtw=True)
         # Copy of original accumulated cost as it will be altered during matching.
         self.__originalACost = np.copy(self.__aCost)
         # collate all possible end points
