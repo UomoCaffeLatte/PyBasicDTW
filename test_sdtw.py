@@ -44,4 +44,37 @@ class NeighbourExclusion_unitTests(unittest.TestCase):
         # Act and Assert
         with self.assertRaises(TypeError):
             NeighbourExclusion.Distance(targetIndex=0, searchArray=endPoints, distance=3)
-        
+    
+    def test_localMaximumExclusion_Leftmost(self):
+        # Arrange
+        endPoints = np.array([5,5,5,10,4,5,6,10,20,30,40], dtype="float64")
+        # Act
+        NeighbourExclusion.LocalMaximum(targetIndex=3, searchArray=endPoints)
+        # Assert
+        self.assertTrue(np.all(endPoints[0:5] == np.inf))
+        self.assertTrue(endPoints[endPoints == np.inf].shape[0] == 5)
+
+    def test_localMaximumExclusion_Rightmost(self):
+        # Arrange
+        endPoints = np.array([5,5,5,10,4,5,6,10,20,15,10], dtype="float64")
+        # Act
+        NeighbourExclusion.LocalMaximum(targetIndex=8, searchArray=endPoints)
+        # Assert
+        self.assertTrue(np.all(endPoints[6:endPoints.shape[0]] == np.inf))
+        self.assertTrue(endPoints[endPoints == np.inf].shape[0] == 7)
+
+    def test_localMaximumExclusion_Center(self):
+        # Arrange
+        endPoints = np.array([5,5,5,10,4,5,6,10,20,15,10], dtype="float64")
+        # Act
+        NeighbourExclusion.LocalMaximum(targetIndex=5, searchArray=endPoints)
+        # Assert
+        self.assertTrue(np.all(endPoints[4:6] == np.inf))
+        self.assertTrue(endPoints[endPoints == np.inf].shape[0] == 2)
+
+    def test_localMaximumExclusion_typeFail(self):
+        # Arrange
+        endPoints = np.array([50,80,90,58,100,20,30,40,50,60], dtype="int")
+        # Act and Assert
+        with self.assertRaises(TypeError):
+            NeighbourExclusion.LocalMaximum(targetIndex=5, searchArray=endPoints)

@@ -24,9 +24,34 @@ class NeighbourExclusion:
         searchArray[mask] = np.inf
 
     @staticmethod
-    def LocalMaximum() -> None:
+    def LocalMaximum(targetIndex:int, searchArray:np.ndarray) -> None:
         # Exclude points within the local maximuim on either side of the center point. As numpy arrays pass by reference, the resulting list does not need to be passed back.
-        pass
+        # ensure searchArray is a float
+        if not searchArray.dtype == np.float64: raise TypeError("SearchArray must of be of a float64 numpy array type.")
+        ## 1. Find neighbour diff, complete left and right sepearte to allow negtaive index
+        leftArray = searchArray[:targetIndex+1]
+        # flip left array to allow negative diff
+        leftDiff = np.flip(np.diff(np.flip(leftArray)))
+        rightArray = searchArray[targetIndex:]
+        rightDiff = np.diff(rightArray)
+        differences = np.concatenate((leftDiff, np.array([0]), rightDiff))
+        ## 2. Create a mask to see any postivie gradients
+        maximums = np.argwhere(differences>0).flatten()
+        ## 3. Find first left most maximum
+        leftMaximum = np.argwhere(maximums<targetIndex).flatten()
+        leftMaxIdx = None
+        if leftMaximum.shape[0] > 0: leftMaxIdx = maximums[leftMaximum[0]]+1
+        if leftMaximum.shape[0] == 0: leftMaxIdx = 0
+        ## 4. Find first right most maximum
+        rightMaximum = np.argwhere(maximums>targetIndex).flatten()
+        rightMaxIdx = None
+        if rightMaximum.shape[0] > 0: rightMaxIdx = maximums[rightMaximum[0]]
+        if rightMaximum.shape[0] == 0: rightMaxIdx = searchArray.shape[0]
+        ## 3. create mask
+        mask = np.zeros(searchArray.shape, bool)
+        mask[leftMaxIdx:rightMaxIdx] = True
+        # 2. Set masked items to np.inf
+        searchArray[mask] = np.inf
 
 class SDTW(Core):
     def __init__(self, x:np.ndarray, y:np.ndarray, distanceMetric:DistanceMetric = DistanceMetric.EUCLIDEAN, stepPattern:StepPattern = StepPattern.CLASSIC, stepWeights:np.ndarray=np.array([]), dimensionWeights:np.ndarray=np.array([])) -> None:
