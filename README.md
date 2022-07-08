@@ -16,7 +16,7 @@ A readable dynamic time warping (dtw) library that performs classical dtw and su
 
 # Quick Start
 
-First install pybasicdtw and dependencies using pip
+First install pybasicdtw and dependencies using pip (COMING SOON)
 
 ```
  pip install pybasicdtw
@@ -144,8 +144,42 @@ Firstly, we initalise sdtw which creates the cost matrices needed to find simila
 
 Now we can find the first similar subsequence in sequence y. But before this, lets quickly go through the arguments of this function.
 
+**Neighbour Exclusion** argument describes the method use to exclude neighbouring end points before the next match is found. All matches are created backwards, starting at the end point. There are two types of exclusion methods you can use, Distance and LocalMaximum based exclusion.
 
+The Distance method excludes neighbouring points within a set distance of indices, this can be selected using the NeighbourExclusion class as follows, the distance can be set using the distance keyword argument when called the FindMatch function:
 ``` python
-    sdtw.FindMatch()
+    NeighbourExclusion.Distance
+    # how to specify distance
+    sdtw.FindMatch(...., distance=10)
 ```
 
+
+The LocalMaximum method excludes neighbouring points up to the next local maximum. This can be selected using the NeighbourExclusion class as follows@
+``` python
+    NeighbourExclusion.Distance
+```
+
+The **OverlapMatches** argument gives you the option to overlap subsequence matches. By default this is false, therefore no two subsequence matches can overlap.
+
+The **InvertEndPointsSelection** argument specifies if there are two non-unique optimum end points which one to choose from. The default is True, hence it will always choose the end point with the largest index. Hence, False is the opposite.
+
+``` python
+    # returns a tuple (path, totalCost)
+    path, totalCost = sdtw.FindMatch(NeighbourExclusion.Distance, distance=10)
+```
+
+Accessing properties of the sdtw class
+``` python
+    # Accumulated cost matrix
+    dtw.AccumulatedCostMatrixnp.ndarray # an n x m matrix where n = length of x and m = length of y.
+    # Local cost matrix
+    dtw.LocalCostMatrix:np.ndarray # an n x m matrix where n = length of x and m = length of y.
+    # gets all matches up to this current time as an ordered list of Tuples (path, totalCost)
+    dtw.Matches
+```
+
+Methods of the sdtw class.
+``` python
+    # get the end points accumulated cost, the input argument is the match similarity path.
+    sdtw.GetEndCost(path)
+```
