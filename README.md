@@ -36,7 +36,7 @@ For example, to use the euclidean distance metric you could either pass in:
     DistanceMetric.EUCLIDEAN
 ```
 or
-```
+``` python
     lambda x,y: np.square(x-y)
 ```
 
@@ -101,24 +101,51 @@ The basic function call using default values:
 Accessing properties of the similarity match
 ``` python
     # Accumulated cost matrix
-    dtw.AccumulatedCostMatrix
+    dtw.AccumulatedCostMatrixnp.ndarray # an n x m matrix where n = length of x and m = length of y.
     # Local cost matrix
-    dtw.LocalCostMatrix
+    dtw.LocalCostMatrix:np.ndarray # an n x m matrix where n = length of x and m = length of y.
     # Match path describing the points of similarity between both sequences.
     # Each element of this path represents the index of the matched points, (x,y) is the order of the indices for sequence x and y.
     # NOTE: The path is in reverse order, where element at index 0 is the end point.
-    dtw.MatchPath
+    dtw.MatchPath:np.ndarray # e.g. array([(3,3),(2,2),(1,1)])
     # The total local cost of the matched path
-    dtw.TotalCost
+    dtw.TotalCost:float # e.g. 10.2
 
 ```
 
-
-
-
 ### 2. Subsequence DTW 
+The steps to find subsequence similarity matches are similar to the Classical DTW with just some extra steps.
+
+
 Import the required classes.
 ``` python
     from PyBasicDTW import SDTW, DistanceMetric, StepPattern, NeighbourExclusion
+```
+
+We will be using the numpy array we generated from the Classical DTW example. If you are unsure what format the inputs need to be please refer to the instructions in the Classical DTW example.
+
+``` python
+    import numpy as np
+    # 1 Dimension, each element corresponds some value at time t.
+    x = np.array([1,2,3])
+    y = np.array([1,2,3,4,5,6,7,8])
+    # For 1D array, we need to ensure each element is in its own array.
+    x = np.array([[value] for value in range(x.shape[0])])
+    # x results: array([[1],[2],[3]])
+    y = np.array([[value] for value in range(y.shape[0])])
+    # y results: array([1],[2],[3],[4],[5],[6],[7],[8])
+```
+
+Firstly, we initalise sdtw which creates the cost matrices needed to find similar subsequences. The x argument is the sequence we are trying find, and the y argument is the sequence in which we are trying find subsequences of within it that best match the x sequence.
+``` python
+    # Optional arguments and their default values are explained in the Classical DTW example
+    sdtw = SDTW(x,y)
+```
+
+Now we can find the first similar subsequence in sequence y. But before this, lets quickly go through the arguments of this function.
+
+
+``` python
+    sdtw.FindMatch()
 ```
 
