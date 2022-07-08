@@ -16,7 +16,7 @@ A readable dynamic time warping (dtw) library that performs classical dtw and su
 
 # Quick Start
 
-First install pybasicdtw and dependencies using pip (COMING SOON)
+First install pybasicdtw and dependencies using pip
 
 ```
  pip install pybasicdtw
