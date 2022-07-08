@@ -1,3 +1,3 @@
-from PyBasicDTW.core import Core, DistanceMetric, StepPattern
-from PyBasicDTW.dtw import DTW
-from PyBasicDTW.sdtw import SDTW, NeighbourExclusion
+from pybasicdtw.core import Core, DistanceMetric, StepPattern
+from pybasicdtw.dtw import DTW
+from pybasicdtw.sdtw import SDTW, NeighbourExclusion

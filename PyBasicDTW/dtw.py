@@ -1,5 +1,5 @@
 import numpy as np
-from PyBasicDTW.core import Core, DistanceMetric, StepPattern
+from pybasicdtw.core import Core, DistanceMetric, StepPattern
 
 class DTW(Core):
     def __init__(self, x:np.ndarray, y:np.ndarray, distanceMetric:DistanceMetric = DistanceMetric.EUCLIDEAN, stepPattern:StepPattern = StepPattern.CLASSIC, stepWeights:np.ndarray=np.array([]), dimensionWeights:np.ndarray=np.array([])) -> None:

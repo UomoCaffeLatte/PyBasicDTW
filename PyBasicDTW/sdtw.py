@@ -1,6 +1,6 @@
 from enum import Enum
 import numpy as np
-from PyBasicDTW.core import Core, DistanceMetric, StepPattern
+from pybasicdtw.core import Core, DistanceMetric, StepPattern
 from typing import Tuple, Type
 import warnings
 import inspect

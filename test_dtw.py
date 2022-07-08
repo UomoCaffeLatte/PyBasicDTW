@@ -1,4 +1,4 @@
-from PyBasicDTW import Core, DistanceMetric, StepPattern, DTW
+from pybasicdtw import Core, DistanceMetric, StepPattern, DTW
 
 import unittest
 import unittest.mock as mock

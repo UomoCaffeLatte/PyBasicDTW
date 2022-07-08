@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
-from PyBasicDTW import SDTW, NeighbourExclusion
+from pybasicdtw import SDTW, NeighbourExclusion
 
 class NeighbourExclusion_unitTests(unittest.TestCase):
 
@@ -93,7 +93,7 @@ class NeighbourExclusion_unitTests(unittest.TestCase):
 
 class SDTW_unitTests(unittest.TestCase):
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
     def test_init_aCostCopy(self, CostMatrixMock):
         # Arrange and Act
         sdtw = SDTW(None, None)
@@ -101,7 +101,7 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sdtw.AccumulatedCostMatrix, np.array([[100],[100],[100]])))
         self.assertTrue(CostMatrixMock.called_once())
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
     def test_init_endPoints(self,CostMatrixMock):
         # Arrange and Act
         sdtw = SDTW(None, None)
@@ -109,7 +109,7 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sdtw._SDTW__endPoints, np.array([100])))
         self.assertTrue(CostMatrixMock.called_once())
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
     def test_init_costMatrix(self,CostMatrixMock):
         # Arrange and Act
         sdtw = SDTW(None, None)
@@ -118,7 +118,7 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array([[100],[100],[100]]), sdtw.AccumulatedCostMatrix))
         self.assertTrue(CostMatrixMock.called_once())
     
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
     def test_getEndCost(self, CostMatrixMock):
         # Arrange
         sdtw = SDTW(None,None)
@@ -128,7 +128,7 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(endCost == 100)
         self.assertTrue(CostMatrixMock.called_once())
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
     def test_findMatch_typeError(self, CostMatrixMock):
         # Arrange
         sdtw = SDTW(None, None)
@@ -136,7 +136,7 @@ class SDTW_unitTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             sdtw.FindMatch(neighbourExclusion="STR")
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
     def test_findMatch_valueErrorClass(self, CostMatrixMock):
         # Arrange
         sdtw = SDTW(None, None)
@@ -146,7 +146,7 @@ class SDTW_unitTests(unittest.TestCase):
             sdtw.FindMatch(TestFunc)
         self.assertEqual("NeighbourExclusion must be a method from the NeighbourExclusion class.", str(ve.exception))
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
     def test_findMatch_valueErrorMethod(self, CostMatrixMock):
         # Arrange
         sdtw = SDTW(None, None)
@@ -155,9 +155,9 @@ class SDTW_unitTests(unittest.TestCase):
             sdtw.FindMatch()
         self.assertEqual("For NeighbourhoodExclusion.Distance please provide a distance using the keyword arg 'distance'.", str(ve.exception))
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
-    @mock.patch("PyBasicDTW.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
-    @mock.patch("PyBasicDTW.sdtw.NeighbourExclusion.Match", return_value=[None])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
+    @mock.patch("pybasicdtw.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
+    @mock.patch("pybasicdtw.sdtw.NeighbourExclusion.Match", return_value=[None])
     def test_findmatch_overlap(self, CostMatrixMock, WarpingPathMock, MatchMock):
         # Arrange
         sdtw = SDTW(None, None)
@@ -167,9 +167,9 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), path))
         self.assertEqual(totalCost, 18)
 
-    @mock.patch("PyBasicDTW.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
-    @mock.patch("PyBasicDTW.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
-    @mock.patch("PyBasicDTW.sdtw.NeighbourExclusion.Match", return_value=[None])
+    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
+    @mock.patch("pybasicdtw.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
+    @mock.patch("pybasicdtw.sdtw.NeighbourExclusion.Match", return_value=[None])
     def test_findmatch_matches(self, CostMatrixMock, WarpingPathMock, MatchMock):
         # Arrange
         sdtw = SDTW(None, None)

@@ -1,4 +1,4 @@
-from PyBasicDTW import Core, DistanceMetric, StepPattern
+from pybasicdtw import Core, DistanceMetric, StepPattern
 
 import unittest
 import unittest.mock as mock
@@ -110,7 +110,7 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(np.array_equal(StepPattern.CLASSIC, core.stepPattern))
 
     # # COST MATRIX
-    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])
+    @mock.patch("pybasicdtw.core.Core.LexiMin", return_value=[])
     def test_costMatrix_xy_fail(self, mockLexiMinIndex):
         # Arrange
         x = np.array([[1,2,3],[1,2,3]])
@@ -120,7 +120,7 @@ class Core_UnitTest(unittest.TestCase):
             self.core.CostMatrix(x = x, y = y)
         mockLexiMinIndex.assert_not_called()
 
-    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[0])
+    @mock.patch("pybasicdtw.core.Core.LexiMin", return_value=[0])
     def test_costMatrix_defaultDimWeights(self, mockLexiMinIndex):
          # Arrange
         x = np.array([[1,2,3],[1,2,3]])
@@ -131,7 +131,7 @@ class Core_UnitTest(unittest.TestCase):
         self.assertTrue(np.array_equal(np.array([1,1,1]), self.core.dimWeights))
         mockLexiMinIndex.assert_called()
 
-    @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])
+    @mock.patch("pybasicdtw.core.Core.LexiMin", return_value=[])
     def test_costMatrix_customDimWeights_fail(self, mockLexiMinIndex):
         # Arrange
         x = np.array([[1,2,3],[1,2,3]])
