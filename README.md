@@ -27,7 +27,7 @@ Create a new python script and import the pybasicdtw modules. The following step
 ### 1. Classical DTW
 Import the required classes.
 ``` python
-    from PyBasicDTW import DTW, DistanceMetric, StepPattern
+    from pybasicdtw import DTW, DistanceMetric, StepPattern
 ```
 **Distance Metric** argument can be of any callable type with two numpy array inputs and one numpy array output. Typically this is a lambda function, which you can create yourself or use ones provided using the DistanceMetric class.
 
@@ -119,7 +119,7 @@ The steps to find subsequence similarity matches are similar to the Classical DT
 
 Import the required classes.
 ``` python
-    from PyBasicDTW import SDTW, DistanceMetric, StepPattern, NeighbourExclusion
+    from pybasicdtw import SDTW, DistanceMetric, StepPattern, NeighbourExclusion
 ```
 
 We will be using the numpy array we generated from the Classical DTW example. If you are unsure what format the inputs need to be please refer to the instructions in the Classical DTW example.
