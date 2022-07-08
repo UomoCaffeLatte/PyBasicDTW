@@ -45,41 +45,69 @@ class Core_UnitTest(unittest.TestCase):
 
     # INIT
     def test_init_defaultStepWeights(self):
-        # Arrange
-        x, y, _, _ = self.OneDSequences()
-        # Act
-        _, _ = self.core.CostMatrix(x,y)
+        # Arrange and Act
+        core = Core()
         # Assert
-        self.assertTrue(np.array_equal(np.array([1]), self.core.dimWeights))
+        self.assertTrue(np.array_equal(np.array([1,1,1]), core.stepWeights))
 
     def test_init_customStepWeights(self):
-        # Arrange
-        x,y, _, _ = self.TwoDSequences()
-        # Act
-        _, _ = self.core.CostMatrix(x,y, dimensionWeights=np.array([1,1]))
+        # Arrange and Act
+        core = Core(stepWeights=np.array([2,3,4]))
         # Assert
-        self.assertTrue(np.array_equal(np.array([1,1]), self.core.dimWeights))
+        self.assertTrue(np.array_equal(np.array([2,3,4]), core.stepWeights))
 
-    def test_init_customStepWeights_fail(self):
-        # Arrange
-        x,y, _, _ = self.TwoDSequences()
-        # Act and Assert
-        with self.assertRaises(ValueError):
-            _, _ = self.core.CostMatrix(x,y,np.array([1,1,1]))
+    def test_init_customStepWeights_failType(self):
+        # Arrange Act Assert
+        with self.assertRaises(TypeError) as te:
+            core = Core(stepWeights=[1])
+            self.assertEqual(str(te.exception), "StepWeights must be of numpy array (ndarray) type.")
+
+    def test_init_customStepWeights_failValueDim(self):
+        # Arrange Act Assert
+        with self.assertRaises(ValueError) as ve:
+            core = Core(stepWeights=np.array([[1]]))
+            self.assertEqual(str(ve.exception), "StepWeights must be a 1 dimensional numpy array.")
     
+    def test_init_customStepWeights_failValueDim(self):
+        # Arrange Act Assert
+        with self.assertRaises(ValueError) as ve:
+            core = Core(stepWeights=np.array([1]))
+            self.assertEqual(str(ve.exception),"StepWeights do not match StepPattern, SW:1 != SP:3")
+
     def test_init_distanceMetric(self):
         # Arrange # Act
         core1 = Core(DistanceMetric.EUCLIDEAN)
         core2 = Core(DistanceMetric.ABSOLUTE)
+        core3 = Core(lambda x,y: np.abs(x-y))
         # Assert
-        self.assertEqual(core1.distanceMetrics[DistanceMetric.EUCLIDEAN.name],core1.metric)
-        self.assertEqual(core2.distanceMetrics[DistanceMetric.ABSOLUTE.name],core2.metric)
-    
+        self.assertEqual(DistanceMetric.EUCLIDEAN,core1.metric)
+        self.assertEqual(DistanceMetric.ABSOLUTE,core2.metric)
+        self.assertEqual((lambda x,y: np.abs(x-y)).__code__.co_code, core3.metric.__code__.co_code)  
+
+    def test_init_distanceMetric_failType(self):
+        # Arrange
+        FAIL = "FAIL"
+        # Act and Assert
+        with self.assertRaises(TypeError)  as te:
+            _ = Core(FAIL)
+            self.assertEqual(str(te.exception), "DistanceMetric must be a Callable type.")
+
+
+    def test_init_distanceMetric_failArgs(self):
+        # Arrange # Act
+        FAIL = lambda x: x
+        # Act and Assert
+        with self.assertRaises(ValueError)  as ve:
+            _ = Core(FAIL)
+            self.assertEqual(str(ve.exception), "DistanceMetric Callable must have two inputs.")
+
+
+
     def test_init_stepPattern(self):
         # Arrange # Act
         core = Core(stepPattern=StepPattern.CLASSIC)
         # Assert
-        self.assertTrue(np.array_equal(StepPattern.CLASSIC.value, core.stepPattern))
+        self.assertTrue(np.array_equal(StepPattern.CLASSIC, core.stepPattern))
 
     # # COST MATRIX
     @mock.patch("PyBasicDTW.core.Core.LexiMin", return_value=[])

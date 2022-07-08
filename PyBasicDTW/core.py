@@ -4,17 +4,17 @@ from types import LambdaType
 from enum import Enum
 import warnings
 
-class DistanceMetric(Enum):
-    EUCLIDEAN = 1
-    ABSOLUTE = 2
+class DistanceMetric:
+    EUCLIDEAN = lambda x,y: np.square(x,y)
+    ABSOLUTE = lambda x,y: np.abs(x-y)
+    
 
-class StepPattern(Enum):
+class StepPattern:
     # NOTE: Ensure ordering is largest step to smallest as this affects the selection when all steps present same cost.
     CLASSIC = np.array([(1,1),(1,0),(0,1)])
 
 class Core:
-    def __init__(self, distanceMetric:DistanceMetric = DistanceMetric.EUCLIDEAN, stepPattern:StepPattern = StepPattern.CLASSIC, stepWeights:np.ndarray=np.array([])) -> None:
-        self.distanceMetrics:dict = {"EUCLIDEAN":lambda x,y: np.square(x,y), "ABSOLUTE":lambda x,y: np.abs(x-y)}
+    def __init__(self, distanceMetric:LambdaType = DistanceMetric.EUCLIDEAN, stepPattern:np.ndarray = StepPattern.CLASSIC, stepWeights:np.ndarray=np.array([])) -> None:
         self.metric = None
         self.stepPattern = None
         self.stepWeights = None
@@ -23,15 +23,16 @@ class Core:
         self.accumulatedCost = None
         self.sdtw:bool = False
         # type Check DistanceMetric & StepPattern
-        if not isinstance(distanceMetric, DistanceMetric): raise TypeError("Distance metric must be of DistanceMetric type.")
-        if not isinstance(stepPattern, StepPattern): raise TypeError("Step pattern must be of StepPattern type.")
-        self.stepPattern = stepPattern.value
-        self.metric = self.distanceMetrics[distanceMetric.name]
+        if not isinstance(distanceMetric, LambdaType): raise TypeError("DistanceMetric must be a Callable type.")
+        if distanceMetric.__code__.co_argcount != 2: raise ValueError("DistanceMetric Callable must have two inputs.")
+        if not isinstance(stepPattern, np.ndarray): raise TypeError("Step pattern must be of numpy array (ndarray) type.")
+        self.stepPattern = stepPattern
+        self.metric = distanceMetric
         # if stepweights are not provided, create default
+        if not isinstance(stepWeights, np.ndarray): raise TypeError("StepWeights must be of numpy array (ndarray) type.")
         if stepWeights.size == 0: self.stepWeights = np.ones((self.stepPattern.shape[0]))
         # if stepweights are provided, check they match the stepPattern
         if stepWeights.size > 0:
-            if not isinstance(stepWeights, np.ndarray): raise TypeError("StepWeights must be of numpy array (ndarray) type.")
             if stepWeights.ndim != 1: raise ValueError("StepWeights must be a 1 dimensional numpy array.")
             if stepWeights.shape[0] != self.stepPattern.shape[0]: raise ValueError(f"StepWeights do not match StepPattern, SW:{stepWeights.shape[0]} != SP:{self.stepPattern.shape[0]}")
             self.stepWeights = stepWeights
@@ -154,4 +155,3 @@ class Core:
         # if more than one minimum found / NON-UNIQUE
         if invert: return np.amax(minimums)
         return np.amin(minimums)
-
