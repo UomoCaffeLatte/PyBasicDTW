@@ -5,7 +5,7 @@ from enum import Enum
 import warnings
 
 class DistanceMetric:
-    EUCLIDEAN = lambda x,y: np.square(x,y)
+    EUCLIDEAN = lambda x,y: np.square(x-y)
     ABSOLUTE = lambda x,y: np.abs(x-y)
     
 
