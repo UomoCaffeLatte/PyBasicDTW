@@ -123,7 +123,7 @@ class SDTW_unitTests(unittest.TestCase):
         # Arrange
         sdtw = SDTW(None,None)
         # Act
-        endCost = sdtw.GetEndCost(np.array([0,0]))
+        endCost = sdtw.GetEndCost(np.array([[0,0]]))
         # Assert
         self.assertTrue(endCost == 100)
         self.assertTrue(CostMatrixMock.called_once())
