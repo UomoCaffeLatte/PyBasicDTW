@@ -84,7 +84,7 @@ class SDTW(Core):
         return self.__matches
 
     def GetEndCost(self, path:np.ndarray) -> float:
-        return self.__originalACost[path[0]]
+        return self.__originalACost[path[0][0],path[0][1]]
 
     def FindMatch(self, neighbourExclusion:Type[NeighbourExclusion]=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, **kwargs) -> Tuple:
         # Validate neighbourExclusion optional args are valid
@@ -99,10 +99,14 @@ class SDTW(Core):
         # Find optimum end point, check if right or leftmost match to be chosen in non-unique scenario.
         optimumEndPointIdx = self.LexiMin(self.__endPoints, invert=invertEndPointSelection)
         # Find warping path
-        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, optimumEndPointIdx)
+        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, (self.__lCost.shape[0]-1,optimumEndPointIdx))
         # Perform neighbourhood exclusion
         neighbourExclusion(optimumEndPointIdx, self.__endPoints, **kwargs)
         # add match overlap feature onto accumulated cost matrix
-        if not overlapMatches: NeighbourExclusion.Match(optimumEndPointIdx, self.__endPoints, (path[0][1] - path[-1][1]))
+        if not overlapMatches: 
+            NeighbourExclusion.Match(optimumEndPointIdx, self.__endPoints, (path[0][1] - path[-1][1]))
+            self.__aCost[:,path[-1][1]:path[0][1]+1] = np.inf 
+            self.__lCost[:,path[-1][1]:path[0][1]+1] = np.inf
+
         self.__matches.append([path, totalCost])
         return path, totalCost

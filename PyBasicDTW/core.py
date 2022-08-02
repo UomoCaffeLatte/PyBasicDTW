@@ -114,12 +114,11 @@ class Core:
             # create mask from step choices
             mask = np.zeros(aCost.shape, bool)
             stepChoices = path[-1] - self.stepPattern
-            mask[stepChoices[:,0],stepChoices[:,1]] = True
+            stepCosts = np.array([ aCost[step[0],step[1]] for step in stepChoices ])
             # Find lowest costing step and # ignore negative stepChoices by setting aCost to INF
-            stepCosts = aCost[mask]
             # find index of elements with negative index and set cost to inf
-            negativeIndices = np.argwhere(stepChoices<0)
-            for nIndx in negativeIndices: stepCosts[nIndx[0]] = np.inf
+            negativeIndices = np.argwhere(stepChoices<0)[:,0] #NEW
+            for nIndx in negativeIndices: stepCosts[nIndx] = np.inf
             optimalStep = stepChoices[self.LexiMin(stepCosts)]
             path.append(optimalStep)
             # Check if start point reached
