@@ -96,7 +96,7 @@ class Core:
         return self.localCost, self.accumulatedCost
 
         ## /COSTCALC ##
-    def WarpingPath(self, aCost:np.ndarray, lCost:np.ndarray, endIndex:Tuple=None) -> Tuple:
+    def WarpingPath(self, aCost:np.ndarray, lCost:np.ndarray, pathContstrainDistance:float=100*100, endIndex:Tuple=None) -> Tuple:
         # check if given endpoint can be used or not.
         forceStartPoint = True
         if not self.sdtw and endIndex != None: 
@@ -106,6 +106,9 @@ class Core:
         # calculate end point if non given
         if endIndex == None: 
             endIndex = (aCost.shape[0]-1, lCost.shape[1]-1)
+        # calculate constrain line 
+        constantC =(endIndex[1]-endIndex[0])
+        distanceToLine = lambda x,y: np.abs(y-x-constantC)/np.sqrt(2)
         # start finding path
         path = [endIndex]
         startReached = False
@@ -114,6 +117,13 @@ class Core:
             # create mask from step choices
             mask = np.zeros(aCost.shape, bool)
             stepChoices = path[-1] - self.stepPattern
+            
+            # check steppattern is within path constrain, if not replace with closest to limits
+            indxToDelete = []
+            for i,step in enumerate(stepChoices):
+                d = distanceToLine(step[0], step[1])
+                if d > pathContstrainDistance: indxToDelete.append(i)
+            for idx in sorted(indxToDelete, reverse=True): stepChoices = np.delete(stepChoices, idx, 0)
             stepCosts = np.array([ aCost[step[0],step[1]] for step in stepChoices ])
             # Find lowest costing step and # ignore negative stepChoices by setting aCost to INF
             # find index of elements with negative index and set cost to inf
@@ -121,6 +131,11 @@ class Core:
             for nIndx in negativeIndices: stepCosts[nIndx] = np.inf
             optimalStep = stepChoices[self.LexiMin(stepCosts)]
             path.append(optimalStep)
+            # check if wall has been hit
+            if optimalStep[1] == 0:
+                for i in range(optimalStep[0],-1, -1): path.append((i,0))
+                break
+
             # Check if start point reached
             if forceStartPoint and (path[-1] == (0,0)).all(): startReached = True
             if not forceStartPoint and path[-1][0] == 0: startReached = True
@@ -129,6 +144,7 @@ class Core:
         mask = np.zeros(lCost.shape, bool)
         mask[path[:,0],path[:,1]] = True
         totalCost = np.sum(lCost[mask])
+        print(path)
         return path, totalCost
         
 

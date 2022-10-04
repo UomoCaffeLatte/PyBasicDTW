@@ -86,7 +86,7 @@ class SDTW(Core):
     def GetEndCost(self, path:np.ndarray) -> float:
         return self.__originalACost[path[0][0],path[0][1]]
 
-    def FindMatch(self, neighbourExclusion:Type[NeighbourExclusion]=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, **kwargs) -> Tuple:
+    def FindMatch(self, neighbourExclusion:Type[NeighbourExclusion]=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, pathContstrainDistance:float=100*100,**kwargs) -> Tuple:
         # Validate neighbourExclusion optional args are valid
         if not callable(neighbourExclusion): raise TypeError("NeighbourExclusion must be of NeighbourExclusion type.")
         if not hasattr(NeighbourExclusion, neighbourExclusion.__name__): raise ValueError("NeighbourExclusion must be a method from the NeighbourExclusion class.")
@@ -99,7 +99,7 @@ class SDTW(Core):
         # Find optimum end point, check if right or leftmost match to be chosen in non-unique scenario.
         optimumEndPointIdx = self.LexiMin(self.__endPoints, invert=invertEndPointSelection)
         # Find warping path
-        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, (self.__lCost.shape[0]-1,optimumEndPointIdx))
+        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, pathContstrainDistance, (self.__lCost.shape[0]-1,optimumEndPointIdx))
         # Perform neighbourhood exclusion
         neighbourExclusion(optimumEndPointIdx, self.__endPoints, **kwargs)
         # add match overlap feature onto accumulated cost matrix
