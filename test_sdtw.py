@@ -181,3 +181,8 @@ class SDTW_unitTests(unittest.TestCase):
         self.assertEqual(sdtw.Matches[0][1], 18)
         self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), sdtw.Matches[1][0]))
         self.assertEqual(sdtw.Matches[1][1], 18)
+
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

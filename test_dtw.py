@@ -104,3 +104,6 @@ class DTW_UnitTests(unittest.TestCase):
         self.assertTrue(np.array_equal(dtw.MatchPath, np.array([[4,2],[3,2],[2,2],[1,1],[0,0]])))
         self.assertEqual(dtw.TotalCost, 26)
         
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
