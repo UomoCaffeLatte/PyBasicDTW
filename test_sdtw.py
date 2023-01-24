@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 import numpy as np
-from pybasicdtw import SDTW, NeighbourExclusion
+from pybasicdtw import SDTW, NeighbourExclusion, DTW
 
 class NeighbourExclusion_unitTests(unittest.TestCase):
 
@@ -80,107 +80,97 @@ class NeighbourExclusion_unitTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             NeighbourExclusion.LocalMaximum(targetIndex=5, searchArray=endPoints)
 
+class SDTW_unitTests(unittest.TestCase):
+
     def test_MatchExclusion_Random(self):
         # Arrange
         endPoints = np.random.default_rng().uniform(0,1000,50)
         matchTimeLength = np.random.randint(0,9)
         targetIndex = np.random.randint(10,50) 
         # Act
-        NeighbourExclusion.Match(targetIndex=targetIndex, searchArray=endPoints, matchTimeLength=matchTimeLength)
+        SDTW(x=np.array([[0],[0]]),y=np.array([[0],[0]]))._SDTW__Match(targetIndex=targetIndex, searchArray=endPoints, matchTimeLength=matchTimeLength)
         # Assert
         self.assertTrue(np.all(endPoints[targetIndex-matchTimeLength:targetIndex+1] == np.inf))
         self.assertTrue(endPoints[endPoints == np.inf].shape[0] == matchTimeLength+1)
 
-class SDTW_unitTests(unittest.TestCase):
-
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
-    def test_init_aCostCopy(self, CostMatrixMock):
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[0,1,3],[1,0,1],[3,1,0]], dtype="float"))
+    def test_init_aCostCopy(self, mockCostMatrix):
         # Arrange and Act
-        sdtw = SDTW(None, None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Assert
-        self.assertTrue(np.array_equal(sdtw.AccumulatedCostMatrix, np.array([[100],[100],[100]])))
-        self.assertTrue(CostMatrixMock.called_once())
+        self.assertTrue(mockCostMatrix.called_once())
 
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[None, np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[0,1,3],[1,0,1],[3,1,0]], dtype="float"))
     def test_init_endPoints(self,CostMatrixMock):
         # Arrange and Act
-        sdtw = SDTW(None, None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Assert
-        self.assertTrue(np.array_equal(sdtw._SDTW__endPoints, np.array([100])))
+        self.assertTrue(np.array_equal(sdtw._SDTW__endPoints, np.array([3,1,0])))
         self.assertTrue(CostMatrixMock.called_once())
 
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
-    def test_init_costMatrix(self,CostMatrixMock):
-        # Arrange and Act
-        sdtw = SDTW(None, None)
-        # Assert
-        self.assertTrue(np.array_equal(np.array([[50],[50],[50]]), sdtw.LocalCostMatrix))
-        self.assertTrue(np.array_equal(np.array([[100],[100],[100]]), sdtw.AccumulatedCostMatrix))
-        self.assertTrue(CostMatrixMock.called_once())
-    
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[0,1,3],[1,0,1],[3,1,0]], dtype="float"))
     def test_getEndCost(self, CostMatrixMock):
         # Arrange
-        sdtw = SDTW(None,None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Act
         endCost = sdtw.GetEndCost(np.array([[0,0]]))
         # Assert
-        self.assertTrue(endCost == 100)
+        self.assertTrue(endCost == 0)
         self.assertTrue(CostMatrixMock.called_once())
 
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[0,1,3],[1,0,1],[3,1,0]], dtype="float"))
     def test_findMatch_typeError(self, CostMatrixMock):
         # Arrange
-        sdtw = SDTW(None, None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Act and Assert
-        with self.assertRaises(TypeError):
+        with self.assertRaises(TypeError) as ve:
             sdtw.FindMatch(neighbourExclusion="STR")
+            self.assertEqual(str(ve.exception), "NeighbourExclusion must be a callable type.")
 
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
-    def test_findMatch_valueErrorClass(self, CostMatrixMock):
-        # Arrange
-        sdtw = SDTW(None, None)
-        def TestFunc(): return None
-        # Act and Assert
-        with self.assertRaises(ValueError) as ve:
-            sdtw.FindMatch(TestFunc)
-        self.assertEqual("NeighbourExclusion must be a method from the NeighbourExclusion class.", str(ve.exception))
-
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[50],[50],[50]]), np.array([[100],[100],[100]])])
-    def test_findMatch_valueErrorMethod(self, CostMatrixMock):
-        # Arrange
-        sdtw = SDTW(None, None)
-        # Act and Assert
-        with self.assertRaises(ValueError) as ve:
-            sdtw.FindMatch()
-        self.assertEqual("For NeighbourhoodExclusion.Distance please provide a distance using the keyword arg 'distance'.", str(ve.exception))
-
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
-    @mock.patch("pybasicdtw.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
-    @mock.patch("pybasicdtw.sdtw.NeighbourExclusion.Match", return_value=[None])
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
+    @mock.patch("pybasicdtw.sdtw.SDTW._SDTW__Match", return_value=[None])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float"))
     def test_findmatch_overlap(self, CostMatrixMock, WarpingPathMock, MatchMock):
         # Arrange
-        sdtw = SDTW(None, None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Act
         path, totalCost = sdtw.FindMatch(distance=1)
         # Assert
         self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), path))
         self.assertEqual(totalCost, 18)
 
-    @mock.patch("pybasicdtw.core.Core.CostMatrix", return_value=[np.array([[8,8,8,8,8], [6,6,6,6,6], [4,4,4,4,4]], dtype="float"), np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float")])
-    @mock.patch("pybasicdtw.core.Core.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
-    @mock.patch("pybasicdtw.sdtw.NeighbourExclusion.Match", return_value=[None])
+    @mock.patch("pybasicdtw.dtw.DTW._DTW__CostMatrix", return_value=[])
+    @mock.patch("pybasicdtw.dtw.DTW.WarpingPath", return_value=[np.array([(2,4),(1,3),(0,2)]), 18])
+    @mock.patch("pybasicdtw.sdtw.SDTW._SDTW__Match", return_value=[None])
+    @mock.patch("pybasicdtw.dtw.DTW.accumulatedCost", np.array([[8,8,8,8,8], [14,14,14,14,14], [18,18,18,18,18]], dtype="float"))
     def test_findmatch_matches(self, CostMatrixMock, WarpingPathMock, MatchMock):
         # Arrange
-        sdtw = SDTW(None, None)
+        x = np.array([[1],[2],[3]], dtype="float")
+        y = np.array([[1],[2],[3],[5],[6],[7]], dtype="float")
+        sdtw = SDTW(x=x,y=y)
         # Act
         _, _ = sdtw.FindMatch(distance=1)
         _, _ = sdtw.FindMatch(distance=1)
         # Assert
-        self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), sdtw.Matches[0][0]))
-        self.assertEqual(sdtw.Matches[0][1], 18)
-        self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), sdtw.Matches[1][0]))
-        self.assertEqual(sdtw.Matches[1][1], 18)
+        self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), sdtw.matches[0][0]))
+        self.assertEqual(sdtw.matches[0][1], 18)
+        self.assertTrue(np.array_equal(np.array([(2,4),(1,3),(0,2)]), sdtw.matches[1][0]))
+        self.assertEqual(sdtw.matches[1][1], 18)
 
 
 

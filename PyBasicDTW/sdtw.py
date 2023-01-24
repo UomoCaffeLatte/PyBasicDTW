@@ -1,16 +1,9 @@
-from enum import Enum
+from pybasicdtw.dtw import DTW
+from typing import Tuple, Callable
 import numpy as np
-from pybasicdtw.core import Core, DistanceMetric, StepPattern
-from typing import Tuple, Type
 import warnings
-import inspect
 
 class NeighbourExclusion:
-    @classmethod
-    def Match(cls,targetIndex:int, searchArray:np.ndarray, matchTimeLength:int) -> None:
-        # Exclude points within the current matched period. As numpy arrays pass by reference, the resulting list does not need to be passed back.
-        searchArray[targetIndex-matchTimeLength:targetIndex+1] = np.inf
-
     @classmethod
     def Distance(cls,targetIndex:int, searchArray:np.ndarray, **kwargs) -> None:
         # Exclude points within set distance from center. As numpy arrays pass by reference, the resulting list does not need to be passed back.
@@ -58,55 +51,57 @@ class NeighbourExclusion:
         # 2. Set masked items to np.inf
         searchArray[mask] = np.inf
 
-class SDTW(Core):
-    def __init__(self, x:np.ndarray, y:np.ndarray, distanceMetric:DistanceMetric = DistanceMetric.EUCLIDEAN, stepPattern:StepPattern = StepPattern.CLASSIC, stepWeights:np.ndarray=np.array([]), dimensionWeights:np.ndarray=np.array([])) -> None:
-        # Initalise CORE
-        super().__init__(distanceMetric=distanceMetric, stepPattern=stepPattern, stepWeights=stepWeights)
-        # compute match
-        self.__lCost, self.__aCost = self.CostMatrix(x, y, dimensionWeights, sdtw=True)
-        # Copy of original accumulated cost as it will be altered during matching.
-        self.__originalACost = np.copy(self.__aCost)
-        # collate all possible end points
-        self.__endPoints = np.copy(self.__aCost[-1,:])
-        # variable to store ordered matches with each match a tuple in the format (path, totalCost)
+class SDTW(DTW):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(sdtw=True, **kwargs)
+        # copy of original accumulated cost matrix
+        self.__originalAccumulatedCost = np.copy(self.accumulatedCost)
+        # retrieve all possible end points list
+        self.__endPoints = np.copy(self.accumulatedCost[-1,:])
         self.__matches:list = []
-
+    
     @property
-    def AccumulatedCostMatrix(self):
-        return self.__originalACost
-
+    def OriginalAccumulatedCost(self):
+        return self.__originalAccumulatedCost
+    
     @property
-    def LocalCostMatrix(self):
-        return self.__lCost
-
-    @property
-    def Matches(self):
+    def matches(self):
         return self.__matches
-
+    
     def GetEndCost(self, path:np.ndarray) -> float:
-        return self.__originalACost[path[0][0],path[0][1]]
+        return self.__originalAccumulatedCost[path[0][0],path[0][1]]
 
-    def FindMatch(self, neighbourExclusion:Type[NeighbourExclusion]=NeighbourExclusion.Distance, overlapMatches=False, invertEndPointSelection:bool=True, pathContstrainDistance:float=100*100,**kwargs) -> Tuple:
-        # Validate neighbourExclusion optional args are valid
-        if not callable(neighbourExclusion): raise TypeError("NeighbourExclusion must be of NeighbourExclusion type.")
-        if not hasattr(NeighbourExclusion, neighbourExclusion.__name__): raise ValueError("NeighbourExclusion must be a method from the NeighbourExclusion class.")
-        if neighbourExclusion == NeighbourExclusion.Distance: 
-            if kwargs.get("distance","NONE") == "NONE": raise ValueError("For NeighbourhoodExclusion.Distance please provide a distance using the keyword arg 'distance'.")
+    def __Match(self,targetIndex:int, 
+              searchArray:np.ndarray, 
+              matchTimeLength:int) -> None:
+        # Exclude points within the current matched period. As numpy arrays pass by reference, the resulting list does not need to be passed back.
+        searchArray[targetIndex-matchTimeLength:targetIndex+1] = np.inf
+
+    def FindMatch(self, neighbourExclusion:Callable=NeighbourExclusion.Distance, 
+                  overlapMatches:bool=True, 
+                  invertEndPointSelection:bool=True,
+                  **kwargs) -> Tuple:
+        # check neighbour exclusion is callable
+        if not callable(neighbourExclusion): raise TypeError("NeighbourExclusion must be a callable type.")
         # Check if any more matches can be found
         if np.all(self.__endPoints == np.inf):
             warnings.warn("No more matches can be found.")
             return None, None
         # Find optimum end point, check if right or leftmost match to be chosen in non-unique scenario.
-        optimumEndPointIdx = self.LexiMin(self.__endPoints, invert=invertEndPointSelection)
+        optimumEndPointIdx = self._DTW__LexiMin(self.__endPoints, invert=invertEndPointSelection)
         # Find warping path
-        path, totalCost = self.WarpingPath(self.__aCost, self.__lCost, pathContstrainDistance, (self.__lCost.shape[0]-1,optimumEndPointIdx))
+        path, totalCost = self.WarpingPath(self._DTW__aCost, 
+                                           self._DTW__lCost,
+                                           (self._DTW__lCost.shape[0]-1,optimumEndPointIdx))
         # Perform neighbourhood exclusion
         neighbourExclusion(optimumEndPointIdx, self.__endPoints, **kwargs)
         # add match overlap feature onto accumulated cost matrix
         if not overlapMatches: 
-            NeighbourExclusion.Match(optimumEndPointIdx, self.__endPoints, (path[0][1] - path[-1][1]))
-            self.__aCost[:,path[-1][1]:path[0][1]+1] = np.inf 
-            self.__lCost[:,path[-1][1]:path[0][1]+1] = np.inf
+            self.__Match(optimumEndPointIdx, 
+                                     self.__endPoints, 
+                                     (path[0][1] - path[-1][1]))
+            self._DTW__aCost[:,path[-1][1]:path[0][1]+1] = np.inf 
+            self._DTW__lCost[:,path[-1][1]:path[0][1]+1] = np.inf
 
         self.__matches.append([path, totalCost])
         return path, totalCost
